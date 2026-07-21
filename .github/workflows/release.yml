@@ -82,88 +82,33 @@ jobs:
           path: ${{ github.workspace }}/tdlib-install
           key: tdlib-1.8.65-${{ matrix.target }}
 
-      - name: Build Zlib (Windows)
-        if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
-        shell: pwsh
-        run: |
-          git clone https://github.com/madler/zlib.git zlib-src
-          cd zlib-src
-          git checkout v1.3.1
-          mkdir build
-          cd build
-          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
-          cmake --build . --config Release --target install
-
-      - name: Build Zlib (Linux)
-        if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
-        shell: bash
-        run: |
-          EXTRA_FLAGS=""
-          if [[ "${{ matrix.target }}" == i686* ]]; then
-            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32"
-          fi
-
-          git clone https://github.com/madler/zlib.git zlib-src
-          cd zlib-src
-          git checkout v1.3.1
-          mkdir build
-          cd build
-          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
-          cmake --build . --config Release --target install
-
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
         shell: pwsh
-        env:
-          CL: /I"${{ github.workspace }}\tdlib-install\include"
-          INCLUDE: ${{ github.workspace }}\tdlib-install\include
         run: |
-          $zlib_inc = "$env:GITHUB_WORKSPACE\tdlib-install\include"
-          $zlib_lib = "$env:GITHUB_WORKSPACE\tdlib-install\lib\zlibstatic.lib"
-          if (-not (Test-Path $zlib_lib)) {
-            $zlib_lib = "$env:GITHUB_WORKSPACE\tdlib-install\lib\zlib.lib"
-          }
-
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
-
-          Copy-Item "$zlib_inc\zlib.h" "tdutils\td\utils\zlib.h"
-          Copy-Item "$zlib_inc\zconf.h" "tdutils\td\utils\zconf.h"
-
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\tdlib-install" -DZLIB_ROOT="$env:GITHUB_WORKSPACE\tdlib-install" -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_INCLUDE_DIRS="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCLONE_ZLIB=ON -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
         shell: bash
-        env:
-          CPATH: ${{ github.workspace }}/tdlib-install/include
-          CPLUS_INCLUDE_PATH: ${{ github.workspace }}/tdlib-install/include
         run: |
           EXTRA_FLAGS=""
           if [[ "${{ matrix.target }}" == i686* ]]; then
             EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LIBRARY_PATH=/usr/lib/i386-linux-gnu -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/i386-linux-gnu/libcrypto.so -DOPENSSL_SSL_LIBRARY=/usr/lib/i386-linux-gnu/libssl.so"
           fi
 
-          ZLIB_INC="$GITHUB_WORKSPACE/tdlib-install/include"
-          ZLIB_LIB="$GITHUB_WORKSPACE/tdlib-install/lib/libz.a"
-          if [ ! -f "$ZLIB_LIB" ]; then
-            ZLIB_LIB="$GITHUB_WORKSPACE/tdlib-install/lib/libz.so"
-          fi
-
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
-
-          cp "$ZLIB_INC/zlib.h" "tdutils/td/utils/zlib.h"
-          cp "$ZLIB_INC/zconf.h" "tdutils/td/utils/zconf.h"
-
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/tdlib-install" -DZLIB_ROOT="$GITHUB_WORKSPACE/tdlib-install" -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_INCLUDE_DIRS="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF -DCLONE_ZLIB=ON $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
           cmake --build . --config Release --target install -j2
 
       - name: Build release component
