@@ -1,7 +1,0 @@
-LIBRARY "telegram_native"
-
-EXPORTS
-GetClassObject
-DestroyObject
-GetClassNames
-SetPlatformCapabilities

@@ -1,0 +1,15 @@
+[package]
+name = "telegram_native"
+version = "1.8.65"
+edition = "2021"
+authors = ["Infatum <infactum@gmail.com>"]
+description = "Native API 1C component for Telegram (TDLib) written in Rust"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+utf16_lit = "2.0"
+native_api_1c = { path = "./native_api_1c/native_api_1c" }
+libc = "0.2"
+once_cell = "1.18"

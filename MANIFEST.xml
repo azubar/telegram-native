@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle xmlns="http://v8.1c.ru/8.2/addin/bundle" version="1.0">
+    <component os="Windows" architecture="x86" path="telegram_native_win32.dll" type="native"/>
+    <component os="Windows" architecture="x86_64" path="telegram_native_win64.dll" type="native"/>
+    <component os="Linux" architecture="x86" path="telegram_native_linux32.so" type="native"/>
+    <component os="Linux" architecture="x86_64" path="telegram_native_linux64.so" type="native"/>
+</bundle>

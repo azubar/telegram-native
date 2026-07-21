@@ -4,6 +4,7 @@ AGENTS.md
 # Build directories
 /build/
 /out/
+/target/
 CMakeCache.txt
 CMakeFiles/
 CMakeSettings.json
@@ -27,3 +28,8 @@ Thumbs.db
 # Python cache files
 __pycache__/
 *.pyc
+
+# Built artifacts
+*.dll
+*.so
+*.zip

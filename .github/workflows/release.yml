@@ -1,0 +1,106 @@
+name: Build and Release Telegram Native
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: telegram_native_win64.dll
+            binary_name: telegram_native.dll
+
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+            artifact_name: telegram_native_win32.dll
+            binary_name: telegram_native.dll
+
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: telegram_native_linux64.so
+            binary_name: libtelegram_native.so
+
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            artifact_name: telegram_native_linux32.so
+            binary_name: libtelegram_native.so
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux multilib dependencies
+        if: matrix.target == 'i686-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+
+      - name: Build release component
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          TD_STATIC: 1
+
+      - name: Prepare artifact
+        shell: pwsh
+        run: |
+          $src = "target/${{ matrix.target }}/release/${{ matrix.binary_name }}"
+          if (-not (Test-Path $src)) {
+            $src = "target/release/${{ matrix.binary_name }}"
+          }
+          Copy-Item -Path $src -Destination "./${{ matrix.artifact_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ./${{ matrix.artifact_name }}
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
+      - name: Create 1C Component Package (AddIn.zip)
+        run: |
+          zip -j AddIn.zip ./artifacts/* MANIFEST.xml README.md LICENSE_1_0.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            AddIn.zip
+            ./artifacts/telegram_native_win64.dll
+            ./artifacts/telegram_native_win32.dll
+            ./artifacts/telegram_native_linux64.so
+            ./artifacts/telegram_native_linux32.so
+          draft: false
+          prerelease: false
+          generate_release_notes: true
