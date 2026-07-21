@@ -48,15 +48,54 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Linux multilib dependencies
+      - name: Install Linux multilib & OpenSSL dependencies
         if: matrix.target == 'i686-unknown-linux-gnu'
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib
+          sudo apt-get install -y gcc-multilib g++-multilib libssl-dev:i386 zlib1g-dev:i386
+
+      - name: Cache TDLib
+        id: cache-tdlib
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/tdlib-install
+          key: tdlib-1.8.65-${{ matrix.target }}
+
+      - name: Build TDLib (Windows)
+        if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
+        shell: pwsh
+        run: |
+          git clone https://github.com/tdlib/td.git td-src
+          cd td-src
+          git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
+          mkdir build
+          cd build
+          $arch = if ("${{ matrix.target }}" -like "i686*") { "Win32" } else { "x64" }
+          cmake -G "Visual Studio 17 2022" -A $arch -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\tdlib-install" ..
+          cmake --build . --config Release --target install --parallel 2
+
+      - name: Build TDLib (Linux)
+        if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
+        shell: bash
+        run: |
+          git clone https://github.com/tdlib/td.git td-src
+          cd td-src
+          git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
+          mkdir build
+          cd build
+          EXTRA_FLAGS=""
+          if [[ "${{ matrix.target }}" == i686* ]]; then
+            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32"
+          fi
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/tdlib-install" ..
+          cmake --build . --config Release --target install -j2
 
       - name: Build release component
+        shell: pwsh
         run: cargo build --release --target ${{ matrix.target }}
         env:
+          TD_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
           TD_STATIC: 1
 
       - name: Prepare artifact
