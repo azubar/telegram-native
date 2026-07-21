@@ -95,12 +95,18 @@ jobs:
           cmake --build . --config Release --target install
 
           cd ${{ github.workspace }}
+          $zlib_inc = "${{ github.workspace }}\tdlib-install\include"
+          $zlib_lib = "${{ github.workspace }}\tdlib-install\lib\zlibstatic.lib"
+          if (-not (Test-Path $zlib_lib)) {
+            $zlib_lib = "${{ github.workspace }}\tdlib-install\lib\zlib.lib"
+          }
+
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DZLIB_ROOT="${{ github.workspace }}\tdlib-install" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
@@ -121,12 +127,18 @@ jobs:
           cmake --build . --config Release --target install
 
           cd ${{ github.workspace }}
+          ZLIB_INC="${{ github.workspace }}/tdlib-install/include"
+          ZLIB_LIB="${{ github.workspace }}/tdlib-install/lib/libz.a"
+          if [ ! -f "$ZLIB_LIB" ]; then
+            ZLIB_LIB="${{ github.workspace }}/tdlib-install/lib/libz.so"
+          fi
+
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DZLIB_ROOT="${{ github.workspace }}/tdlib-install" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/tdlib-install" ..
           cmake --build . --config Release --target install -j2
 
       - name: Build release component
