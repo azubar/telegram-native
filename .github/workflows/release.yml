@@ -48,12 +48,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Linux multilib & OpenSSL dependencies
-        if: matrix.target == 'i686-unknown-linux-gnu'
+      - name: Install gperf (Windows)
+        if: contains(matrix.os, 'windows')
+        run: choco install gperf
+
+      - name: Install Linux build dependencies
+        if: contains(matrix.os, 'ubuntu')
         run: |
-          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib libssl-dev:i386 zlib1g-dev:i386
+          sudo apt-get install -y gperf libssl-dev zlib1g-dev
+          if [[ "${{ matrix.target }}" == i686* ]]; then
+            sudo dpkg --add-architecture i386
+            sudo apt-get update
+            sudo apt-get install -y gcc-multilib g++-multilib libssl-dev:i386 zlib1g-dev:i386
+          fi
 
       - name: Cache TDLib
         id: cache-tdlib
