@@ -1,0 +1,29 @@
+# Agent-specific files
+AGENTS.md
+
+# Build directories
+/build/
+/out/
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+*.dir/
+
+# VCPKG directories
+/vcpkg_installed/
+
+# MSVC / IDE files
+.vs/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.filters
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python cache files
+__pycache__/
+*.pyc

@@ -1,13 +1,13 @@
 include(vcpkg_common_functions)
 
-set(VERSION 1.6.1)
+set(VERSION 1.8.65)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/tdlib-${VERSION})
 
 vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO tdlib/td
-        REF c407b244a086e71773e0b9f8f64d4fb0536bc447
-        SHA512 5e3cec2d7568bad9cb5a5e938aeab821cbac7b51477b581c25439bdfb2e398368a431a0a62dadf5030460865ddbec00e30b0afa29fbc05dcd75dd4d81eb2bd47
+        REF 022d60202e446ad1287b9fb68e687c8a0760788b
+        SHA512 7f6446c2c2937dba8971d8b13b67ae7a0056aa812a9ae55bcbdb7875213421262d09613be1869525b2e3e8c2f4b494b7521d0f36e7257e87f5d0d0fa867f604c
         HEAD_REF master
 )
 

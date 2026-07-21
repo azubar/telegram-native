@@ -43,7 +43,7 @@ RUN set -xe \
 RUN set -xe \
     && git clone https://github.com/tdlib/td.git \
     && cd td \
-    && git reset --hard c407b244a086e71773e0b9f8f64d4fb0536bc447 \
+    && git reset --hard 022d60202e446ad1287b9fb68e687c8a0760788b \
     && sed -i '0,/if (NOT OPENSSL_FOUND)/s//set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")\n&/' CMakeLists.txt \
     && sed -i '/add_subdirectory(benchmark)/ s/^#*/#/' CMakeLists.txt \
     && mkdir build \

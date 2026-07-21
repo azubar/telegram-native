@@ -9,7 +9,7 @@ if (UNIX)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
 endif ()
 
-find_package(Td 1.6.1 REQUIRED)
+find_package(Td 1.8.65 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc dt)
 find_package(ZLIB REQUIRED)
