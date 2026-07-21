@@ -85,6 +85,9 @@ jobs:
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
         shell: pwsh
+        env:
+          CL: /I"${{ github.workspace }}\tdlib-install\include"
+          INCLUDE: ${{ github.workspace }}\tdlib-install\include
         run: |
           git clone https://github.com/madler/zlib.git zlib-src
           cd zlib-src
@@ -101,8 +104,6 @@ jobs:
             $zlib_lib = "$env:GITHUB_WORKSPACE\tdlib-install\lib\zlib.lib"
           }
 
-          $env:INCLUDE = "$zlib_inc;$env:INCLUDE"
-
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
@@ -114,6 +115,9 @@ jobs:
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
         shell: bash
+        env:
+          CPATH: ${{ github.workspace }}/tdlib-install/include
+          CPLUS_INCLUDE_PATH: ${{ github.workspace }}/tdlib-install/include
         run: |
           EXTRA_FLAGS=""
           if [[ "${{ matrix.target }}" == i686* ]]; then
@@ -134,9 +138,6 @@ jobs:
           if [ ! -f "$ZLIB_LIB" ]; then
             ZLIB_LIB="$GITHUB_WORKSPACE/tdlib-install/lib/libz.so"
           fi
-
-          export CPATH="$ZLIB_INC:$CPATH"
-          export CPLUS_INCLUDE_PATH="$ZLIB_INC:$CPLUS_INCLUDE_PATH"
 
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
