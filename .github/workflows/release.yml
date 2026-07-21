@@ -106,7 +106,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_PREFIX_PATH="${{ github.workspace }}\tdlib-install" -DCMAKE_INCLUDE_PATH="$zlib_inc" -DCMAKE_LIBRARY_PATH="${{ github.workspace }}\tdlib-install\lib" -DZLIB_ROOT="${{ github.workspace }}\tdlib-install" -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
@@ -115,7 +115,7 @@ jobs:
         run: |
           EXTRA_FLAGS=""
           if [[ "${{ matrix.target }}" == i686* ]]; then
-            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32"
+            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LIBRARY_PATH=/usr/lib/i386-linux-gnu -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/i386-linux-gnu/libcrypto.so -DOPENSSL_SSL_LIBRARY=/usr/lib/i386-linux-gnu/libssl.so"
           fi
 
           git clone https://github.com/madler/zlib.git zlib-src
@@ -138,7 +138,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_PREFIX_PATH="${{ github.workspace }}/tdlib-install" -DCMAKE_INCLUDE_PATH="$ZLIB_INC" -DCMAKE_LIBRARY_PATH="${{ github.workspace }}/tdlib-install/lib" -DZLIB_ROOT="${{ github.workspace }}/tdlib-install" -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/tdlib-install" ..
           cmake --build . --config Release --target install -j2
 
       - name: Build release component
