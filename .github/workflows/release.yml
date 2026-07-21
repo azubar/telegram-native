@@ -88,10 +88,10 @@ jobs:
         run: |
           git clone https://github.com/madler/zlib.git zlib-src
           cd zlib-src
-          git checkout v1.2.11
+          git checkout v1.3.1
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install
 
       - name: Build Zlib (Linux)
@@ -105,10 +105,10 @@ jobs:
 
           git clone https://github.com/madler/zlib.git zlib-src
           cd zlib-src
-          git checkout v1.2.11
+          git checkout v1.3.1
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
+          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
           cmake --build . --config Release --target install
 
       - name: Build TDLib (Windows)
@@ -129,7 +129,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
 
           Copy-Item "$zlib_inc\zlib.h" "tdutils\td\utils\zlib.h"
-          Copy-Item "$zlib_inc\zlibconf.h" "tdutils\td\utils\zlibconf.h"
+          Copy-Item "$zlib_inc\zconf.h" "tdutils\td\utils\zconf.h"
 
           mkdir build
           cd build
@@ -159,7 +159,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
 
           cp "$ZLIB_INC/zlib.h" "tdutils/td/utils/zlib.h"
-          cp "$ZLIB_INC/zlibconf.h" "tdutils/td/utils/zlibconf.h"
+          cp "$ZLIB_INC/zconf.h" "tdutils/td/utils/zconf.h"
 
           mkdir build
           cd build
