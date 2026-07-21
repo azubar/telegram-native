@@ -101,12 +101,14 @@ jobs:
             $zlib_lib = "$env:GITHUB_WORKSPACE\tdlib-install\lib\zlib.lib"
           }
 
+          $env:INCLUDE = "$zlib_inc;$env:INCLUDE"
+
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\tdlib-install" -DCMAKE_C_STANDARD_INCLUDE_DIRECTORIES="$zlib_inc" -DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES="$zlib_inc" -DZLIB_ROOT="$env:GITHUB_WORKSPACE\tdlib-install" -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_INCLUDE_DIRS="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_PREFIX_PATH="$env:GITHUB_WORKSPACE\tdlib-install" -DZLIB_ROOT="$env:GITHUB_WORKSPACE\tdlib-install" -DZLIB_INCLUDE_DIR="$zlib_inc" -DZLIB_INCLUDE_DIRS="$zlib_inc" -DZLIB_LIBRARY="$zlib_lib" -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
@@ -133,12 +135,15 @@ jobs:
             ZLIB_LIB="$GITHUB_WORKSPACE/tdlib-install/lib/libz.so"
           fi
 
+          export CPATH="$ZLIB_INC:$CPATH"
+          export CPLUS_INCLUDE_PATH="$ZLIB_INC:$CPLUS_INCLUDE_PATH"
+
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/tdlib-install" -DCMAKE_C_STANDARD_INCLUDE_DIRECTORIES="$ZLIB_INC" -DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES="$ZLIB_INC" -DZLIB_ROOT="$GITHUB_WORKSPACE/tdlib-install" -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_INCLUDE_DIRS="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/tdlib-install" -DZLIB_ROOT="$GITHUB_WORKSPACE/tdlib-install" -DZLIB_INCLUDE_DIR="$ZLIB_INC" -DZLIB_INCLUDE_DIRS="$ZLIB_INC" -DZLIB_LIBRARY="$ZLIB_LIB" -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
           cmake --build . --config Release --target install -j2
 
       - name: Build release component
