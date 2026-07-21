@@ -19,8 +19,6 @@ fn main() {
         println!("cargo:rustc-link-lib=static=tdnet");
         println!("cargo:rustc-link-lib=static=tddb");
         println!("cargo:rustc-link-lib=static=tdsqlite");
-        println!("cargo:rustc-link-lib=static=tdc");
-        println!("cargo:rustc-link-lib=static=tdtl");
 
         let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
         if target_os == "windows" {
