@@ -22,24 +22,28 @@ jobs:
             artifact_name: telegram_native_win64.dll
             binary_name: telegram_native.dll
             msvc_arch: x64
+            vcpkg_triplet: x64-windows
 
           - os: windows-latest
             target: i686-pc-windows-msvc
             artifact_name: telegram_native_win32.dll
             binary_name: telegram_native.dll
             msvc_arch: x86
+            vcpkg_triplet: x86-windows
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: telegram_native_linux64.so
             binary_name: libtelegram_native.so
             msvc_arch: none
+            vcpkg_triplet: none
 
           - os: ubuntu-latest
             target: i686-unknown-linux-gnu
             artifact_name: telegram_native_linux32.so
             binary_name: libtelegram_native.so
             msvc_arch: none
+            vcpkg_triplet: none
 
     steps:
       - name: Checkout repository
@@ -58,10 +62,12 @@ jobs:
         with:
           arch: ${{ matrix.msvc_arch }}
 
-      - name: Install gperf (Windows)
+      - name: Install Windows dependencies
         if: contains(matrix.os, 'windows')
         shell: pwsh
-        run: choco install gperf -y --no-progress
+        run: |
+          choco install gperf -y --no-progress
+          vcpkg install zlib:${{ matrix.vcpkg_triplet }}
 
       - name: Install Linux build dependencies
         if: contains(matrix.os, 'ubuntu')
@@ -70,9 +76,9 @@ jobs:
           if [[ "${{ matrix.target }}" == i686* ]]; then
             sudo dpkg --add-architecture i386
             sudo apt-get update
-            sudo apt-get install -y gperf gcc-multilib g++-multilib libssl-dev:i386
+            sudo apt-get install -y gperf gcc-multilib g++-multilib libssl-dev:i386 zlib1g-dev:i386
           else
-            sudo apt-get install -y gperf libssl-dev
+            sudo apt-get install -y gperf libssl-dev zlib1g-dev
           fi
 
       - name: Cache TDLib
@@ -91,7 +97,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCLONE_ZLIB=ON -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
@@ -100,7 +106,7 @@ jobs:
         run: |
           EXTRA_FLAGS=""
           if [[ "${{ matrix.target }}" == i686* ]]; then
-            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LIBRARY_PATH=/usr/lib/i386-linux-gnu -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/i386-linux-gnu/libcrypto.so -DOPENSSL_SSL_LIBRARY=/usr/lib/i386-linux-gnu/libssl.so"
+            EXTRA_FLAGS="-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LIBRARY_PATH=/usr/lib/i386-linux-gnu -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/i386-linux-gnu/libcrypto.so -DOPENSSL_SSL_LIBRARY=/usr/lib/i386-linux-gnu/libssl.so -DZLIB_LIBRARY=/usr/lib/i386-linux-gnu/libz.so"
           fi
 
           git clone https://github.com/tdlib/td.git td-src
@@ -108,7 +114,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF -DCLONE_ZLIB=ON $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DTD_ENABLE_JNI=OFF $EXTRA_FLAGS -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/tdlib-install" ..
           cmake --build . --config Release --target install -j2
 
       - name: Build release component
