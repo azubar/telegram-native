@@ -160,11 +160,12 @@ jobs:
 
       - name: Build release component
         shell: pwsh
-        run: cargo build --release --target ${{ matrix.target }}
-        env:
-          TD_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
-          VCPKG_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
-          TD_STATIC: 1
+        run: |
+          $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
+          $env:TD_LIB_DIR = $tdir
+          $env:VCPKG_LIB_DIR = $tdir
+          $env:TD_STATIC = "1"
+          cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare artifact
         shell: pwsh
