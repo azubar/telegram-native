@@ -97,7 +97,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/tdlib-install
-          key: tdlib-1.8.65-v3-${{ matrix.target }}
+          key: tdlib-1.8.65-v4-${{ matrix.target }}
 
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
@@ -110,6 +110,10 @@ jobs:
           cd build
           cmake -A ${{ matrix.msvc_generator_arch }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DOPENSSL_USE_STATIC_LIBS=TRUE -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
+          $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
+          $vdir = "C:/vcpkg/installed/${{ matrix.vcpkg_triplet }}/lib"
+          if (Test-Path "$vdir/zlibstatic.lib") { Copy-Item "$vdir/zlibstatic.lib" "$tdir/zlib.lib" -Force; Copy-Item "$vdir/zlibstatic.lib" "$vdir/zlib.lib" -Force }
+          if (Test-Path "$vdir/zlib.lib") { Copy-Item "$vdir/zlib.lib" "$tdir/zlibstatic.lib" -Force; Copy-Item "$vdir/zlib.lib" "$vdir/zlibstatic.lib" -Force }
 
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
