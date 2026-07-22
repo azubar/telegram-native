@@ -72,6 +72,13 @@ jobs:
         run: |
           choco install gperf -y --no-progress
           vcpkg install zlib:${{ matrix.vcpkg_triplet }} openssl:${{ matrix.vcpkg_triplet }}
+          $vdir = "C:/vcpkg/installed/${{ matrix.vcpkg_triplet }}/lib"
+          if (Test-Path "$vdir/zlibstatic.lib") { Copy-Item "$vdir/zlibstatic.lib" "$vdir/zlib.lib" -Force }
+          if (Test-Path "$vdir/zlib.lib") { Copy-Item "$vdir/zlib.lib" "$vdir/zlibstatic.lib" -Force }
+          if (Test-Path "$vdir/libssl.lib") { Copy-Item "$vdir/libssl.lib" "$vdir/ssl.lib" -Force }
+          if (Test-Path "$vdir/ssl.lib") { Copy-Item "$vdir/ssl.lib" "$vdir/libssl.lib" -Force }
+          if (Test-Path "$vdir/libcrypto.lib") { Copy-Item "$vdir/libcrypto.lib" "$vdir/crypto.lib" -Force }
+          if (Test-Path "$vdir/crypto.lib") { Copy-Item "$vdir/crypto.lib" "$vdir/libcrypto.lib" -Force }
 
       - name: Install Linux build dependencies
         if: contains(matrix.os, 'ubuntu')
