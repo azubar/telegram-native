@@ -136,7 +136,7 @@ jobs:
                   Copy-Item $f.FullName "$tdir\crypto.lib" -Force
               }
           }
-          Write-Host "Contents of $tdir:"
+          Write-Host "Contents of ${tdir}:"
           Get-ChildItem -Path $tdir | Select-Object Name, Length
 
       - name: Build TDLib (Linux)
