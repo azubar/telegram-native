@@ -9,6 +9,10 @@ fn main() {
         println!("cargo:rustc-link-search=native={}", path.join("static").display());
     }
 
+    if let Ok(vcpkg_lib_dir) = std::env::var("VCPKG_LIB_DIR") {
+        println!("cargo:rustc-link-search=native={}", vcpkg_lib_dir);
+    }
+
     if std::env::var("TD_STATIC").is_ok() {
         println!("cargo:rustc-link-lib=static=tdjson_static");
         println!("cargo:rustc-link-lib=static=tdclient");
@@ -26,6 +30,11 @@ fn main() {
             println!("cargo:rustc-link-lib=crypt32");
             println!("cargo:rustc-link-lib=normaliz");
             println!("cargo:rustc-link-lib=psapi");
+            println!("cargo:rustc-link-lib=user32");
+            println!("cargo:rustc-link-lib=advapi32");
+            println!("cargo:rustc-link-lib=libssl");
+            println!("cargo:rustc-link-lib=libcrypto");
+            println!("cargo:rustc-link-lib=zlib");
         } else if target_os == "linux" {
             println!("cargo:rustc-link-lib=ssl");
             println!("cargo:rustc-link-lib=crypto");
