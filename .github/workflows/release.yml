@@ -116,17 +116,13 @@ jobs:
         shell: pwsh
         run: |
           $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
-          $vdir = "C:/vcpkg/installed/${{ matrix.vcpkg_triplet }}/lib"
-          if (Test-Path "$vdir/zlibstatic.lib") { Copy-Item "$vdir/zlibstatic.lib" "$vdir/zlib.lib" -Force }
-          if (Test-Path "$vdir/zlib.lib") { Copy-Item "$vdir/zlib.lib" "$vdir/zlibstatic.lib" -Force }
-          if (Test-Path "$vdir/libssl.lib") { Copy-Item "$vdir/libssl.lib" "$vdir/ssl.lib" -Force }
-          if (Test-Path "$vdir/ssl.lib") { Copy-Item "$vdir/ssl.lib" "$vdir/libssl.lib" -Force }
-          if (Test-Path "$vdir/libcrypto.lib") { Copy-Item "$vdir/libcrypto.lib" "$vdir/crypto.lib" -Force }
-          if (Test-Path "$vdir/crypto.lib") { Copy-Item "$vdir/crypto.lib" "$vdir/libcrypto.lib" -Force }
-          if (Test-Path $tdir) {
-            if (Test-Path "$vdir/zlibstatic.lib") { Copy-Item "$vdir/zlibstatic.lib" "$tdir/zlib.lib" -Force }
-            if (Test-Path "$vdir/zlib.lib") { Copy-Item "$vdir/zlib.lib" "$tdir/zlibstatic.lib" -Force }
-          }
+          $vdir = "C:\vcpkg\installed\${{ matrix.vcpkg_triplet }}\lib"
+          if (Test-Path "$vdir\zlibstatic.lib") { Copy-Item "$vdir\zlibstatic.lib" "$vdir\zlib.lib" -Force; if (Test-Path $tdir) { Copy-Item "$vdir\zlibstatic.lib" "$tdir\zlib.lib" -Force } }
+          if (Test-Path "$vdir\zlib.lib") { Copy-Item "$vdir\zlib.lib" "$vdir\zlibstatic.lib" -Force; if (Test-Path $tdir) { Copy-Item "$vdir\zlib.lib" "$tdir\zlibstatic.lib" -Force } }
+          if (Test-Path "$vdir\libssl.lib") { Copy-Item "$vdir\libssl.lib" "$vdir\ssl.lib" -Force }
+          if (Test-Path "$vdir\ssl.lib") { Copy-Item "$vdir\ssl.lib" "$vdir\libssl.lib" -Force }
+          if (Test-Path "$vdir\libcrypto.lib") { Copy-Item "$vdir\libcrypto.lib" "$vdir\crypto.lib" -Force }
+          if (Test-Path "$vdir\crypto.lib") { Copy-Item "$vdir\crypto.lib" "$vdir\libcrypto.lib" -Force }
 
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')

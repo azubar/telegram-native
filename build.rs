@@ -80,14 +80,19 @@ fn main() {
                 // Auto alias zlibstatic <-> zlib in VCPKG_LIB_DIR and TD_LIB_DIR
                 let zs = p.join("zlibstatic.lib");
                 let zl = p.join("zlib.lib");
-                if zs.exists() && !zl.exists() { let _ = std::fs::copy(&zs, &zl); }
-                if zl.exists() && !zs.exists() { let _ = std::fs::copy(&zl, &zs); }
+
+                if zs.exists() {
+                    let _ = std::fs::copy(&zs, p.join("zlib.lib"));
+                }
+                if zl.exists() {
+                    let _ = std::fs::copy(&zl, p.join("zlibstatic.lib"));
+                }
 
                 if let Ok(td_lib_dir) = std::env::var("TD_LIB_DIR") {
                     let tdp = std::path::Path::new(&td_lib_dir);
                     if zs.exists() {
-                        let _ = std::fs::copy(&zs, tdp.join("zlibstatic.lib"));
                         let _ = std::fs::copy(&zs, tdp.join("zlib.lib"));
+                        let _ = std::fs::copy(&zs, tdp.join("zlibstatic.lib"));
                     }
                     if zl.exists() {
                         let _ = std::fs::copy(&zl, tdp.join("zlib.lib"));
@@ -111,13 +116,15 @@ fn main() {
                     println!("cargo:rustc-link-lib=static=libcrypto");
                 }
 
-                if p.join("zlibstatic.lib").exists() {
+                let has_zs = p.join("zlibstatic.lib").exists();
+                let has_zl = p.join("zlib.lib").exists();
+                if has_zs {
                     println!("cargo:rustc-link-lib=static=zlibstatic");
-                } else if p.join("zlib.lib").exists() {
+                }
+                if has_zl {
                     println!("cargo:rustc-link-lib=static=zlib");
-                } else if p.join("z.lib").exists() {
-                    println!("cargo:rustc-link-lib=static=z");
-                } else {
+                }
+                if !has_zs && !has_zl {
                     println!("cargo:rustc-link-lib=static=zlib");
                 }
             } else {
