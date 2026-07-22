@@ -76,6 +76,25 @@ fn main() {
 
             if let Ok(vcpkg_dir) = std::env::var("VCPKG_LIB_DIR") {
                 let p = std::path::Path::new(&vcpkg_dir);
+
+                // Auto alias zlibstatic <-> zlib in VCPKG_LIB_DIR and TD_LIB_DIR
+                let zs = p.join("zlibstatic.lib");
+                let zl = p.join("zlib.lib");
+                if zs.exists() && !zl.exists() { let _ = std::fs::copy(&zs, &zl); }
+                if zl.exists() && !zs.exists() { let _ = std::fs::copy(&zl, &zs); }
+
+                if let Ok(td_lib_dir) = std::env::var("TD_LIB_DIR") {
+                    let tdp = std::path::Path::new(&td_lib_dir);
+                    if zs.exists() {
+                        let _ = std::fs::copy(&zs, tdp.join("zlibstatic.lib"));
+                        let _ = std::fs::copy(&zs, tdp.join("zlib.lib"));
+                    }
+                    if zl.exists() {
+                        let _ = std::fs::copy(&zl, tdp.join("zlib.lib"));
+                        let _ = std::fs::copy(&zl, tdp.join("zlibstatic.lib"));
+                    }
+                }
+
                 if p.join("libssl.lib").exists() {
                     println!("cargo:rustc-link-lib=static=libssl");
                 } else if p.join("ssl.lib").exists() {
