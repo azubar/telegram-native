@@ -32,9 +32,39 @@ fn main() {
             println!("cargo:rustc-link-lib=psapi");
             println!("cargo:rustc-link-lib=user32");
             println!("cargo:rustc-link-lib=advapi32");
-            println!("cargo:rustc-link-lib=libssl");
-            println!("cargo:rustc-link-lib=libcrypto");
-            println!("cargo:rustc-link-lib=zlib");
+
+            if let Ok(vcpkg_dir) = std::env::var("VCPKG_LIB_DIR") {
+                let p = std::path::Path::new(&vcpkg_dir);
+                if p.join("libssl.lib").exists() {
+                    println!("cargo:rustc-link-lib=libssl");
+                } else if p.join("ssl.lib").exists() {
+                    println!("cargo:rustc-link-lib=ssl");
+                } else {
+                    println!("cargo:rustc-link-lib=libssl");
+                }
+
+                if p.join("libcrypto.lib").exists() {
+                    println!("cargo:rustc-link-lib=libcrypto");
+                } else if p.join("crypto.lib").exists() {
+                    println!("cargo:rustc-link-lib=crypto");
+                } else {
+                    println!("cargo:rustc-link-lib=libcrypto");
+                }
+
+                if p.join("zlib.lib").exists() {
+                    println!("cargo:rustc-link-lib=zlib");
+                } else if p.join("zlibstatic.lib").exists() {
+                    println!("cargo:rustc-link-lib=zlibstatic");
+                } else if p.join("z.lib").exists() {
+                    println!("cargo:rustc-link-lib=z");
+                } else {
+                    println!("cargo:rustc-link-lib=zlib");
+                }
+            } else {
+                println!("cargo:rustc-link-lib=libssl");
+                println!("cargo:rustc-link-lib=libcrypto");
+                println!("cargo:rustc-link-lib=zlib");
+            }
         } else if target_os == "linux" {
             println!("cargo:rustc-link-lib=ssl");
             println!("cargo:rustc-link-lib=crypto");
