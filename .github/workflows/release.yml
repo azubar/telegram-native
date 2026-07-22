@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/tdlib-install
-          key: tdlib-1.8.65-${{ matrix.target }}
+          key: tdlib-1.8.65-v2-${{ matrix.target }}
 
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
