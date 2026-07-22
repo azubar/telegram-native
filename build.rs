@@ -31,6 +31,11 @@ fn main() {
                                     } else {
                                         stem
                                     };
+                                    // On Windows, "tdjson.lib" is an import library for tdjson.dll.
+                                    // Exclude "tdjson" so cargo links tdjson_static (and all static libs) instead!
+                                    if target_os == "windows" && lib_name == "tdjson" {
+                                        continue;
+                                    }
                                     libs.push(lib_name.to_string());
                                 }
                             }
@@ -67,38 +72,39 @@ fn main() {
             println!("cargo:rustc-link-lib=psapi");
             println!("cargo:rustc-link-lib=user32");
             println!("cargo:rustc-link-lib=advapi32");
+            println!("cargo:rustc-link-lib=shell32");
 
             if let Ok(vcpkg_dir) = std::env::var("VCPKG_LIB_DIR") {
                 let p = std::path::Path::new(&vcpkg_dir);
                 if p.join("libssl.lib").exists() {
-                    println!("cargo:rustc-link-lib=libssl");
+                    println!("cargo:rustc-link-lib=static=libssl");
                 } else if p.join("ssl.lib").exists() {
-                    println!("cargo:rustc-link-lib=ssl");
+                    println!("cargo:rustc-link-lib=static=ssl");
                 } else {
-                    println!("cargo:rustc-link-lib=libssl");
+                    println!("cargo:rustc-link-lib=static=libssl");
                 }
 
                 if p.join("libcrypto.lib").exists() {
-                    println!("cargo:rustc-link-lib=libcrypto");
+                    println!("cargo:rustc-link-lib=static=libcrypto");
                 } else if p.join("crypto.lib").exists() {
-                    println!("cargo:rustc-link-lib=crypto");
+                    println!("cargo:rustc-link-lib=static=crypto");
                 } else {
-                    println!("cargo:rustc-link-lib=libcrypto");
+                    println!("cargo:rustc-link-lib=static=libcrypto");
                 }
 
-                if p.join("zlib.lib").exists() {
-                    println!("cargo:rustc-link-lib=zlib");
-                } else if p.join("zlibstatic.lib").exists() {
-                    println!("cargo:rustc-link-lib=zlibstatic");
+                if p.join("zlibstatic.lib").exists() {
+                    println!("cargo:rustc-link-lib=static=zlibstatic");
+                } else if p.join("zlib.lib").exists() {
+                    println!("cargo:rustc-link-lib=static=zlib");
                 } else if p.join("z.lib").exists() {
-                    println!("cargo:rustc-link-lib=z");
+                    println!("cargo:rustc-link-lib=static=z");
                 } else {
-                    println!("cargo:rustc-link-lib=zlib");
+                    println!("cargo:rustc-link-lib=static=zlib");
                 }
             } else {
-                println!("cargo:rustc-link-lib=libssl");
-                println!("cargo:rustc-link-lib=libcrypto");
-                println!("cargo:rustc-link-lib=zlib");
+                println!("cargo:rustc-link-lib=static=libssl");
+                println!("cargo:rustc-link-lib=static=libcrypto");
+                println!("cargo:rustc-link-lib=static=zlibstatic");
             }
         } else if target_os == "linux" {
             println!("cargo:rustc-link-lib=ssl");

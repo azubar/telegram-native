@@ -23,7 +23,7 @@ jobs:
             binary_name: telegram_native.dll
             msvc_arch: x64
             msvc_generator_arch: x64
-            vcpkg_triplet: x64-windows
+            vcpkg_triplet: x64-windows-static
 
           - os: windows-latest
             target: i686-pc-windows-msvc
@@ -31,7 +31,7 @@ jobs:
             binary_name: telegram_native.dll
             msvc_arch: x86
             msvc_generator_arch: Win32
-            vcpkg_triplet: x86-windows
+            vcpkg_triplet: x86-windows-static
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/tdlib-install
-          key: tdlib-1.8.65-v2-${{ matrix.target }}
+          key: tdlib-1.8.65-v3-${{ matrix.target }}
 
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
@@ -101,7 +101,7 @@ jobs:
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -A ${{ matrix.msvc_generator_arch }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -A ${{ matrix.msvc_generator_arch }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DOPENSSL_USE_STATIC_LIBS=TRUE -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Build TDLib (Linux)
