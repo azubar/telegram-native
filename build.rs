@@ -14,17 +14,52 @@ fn main() {
     }
 
     if std::env::var("TD_STATIC").is_ok() {
-        println!("cargo:rustc-link-lib=static=tdjson_static");
-        println!("cargo:rustc-link-lib=static=tdclient");
-        println!("cargo:rustc-link-lib=static=tdcore");
-        println!("cargo:rustc-link-lib=static=tdapi");
-        println!("cargo:rustc-link-lib=static=tdactor");
-        println!("cargo:rustc-link-lib=static=tdutils");
-        println!("cargo:rustc-link-lib=static=tdnet");
-        println!("cargo:rustc-link-lib=static=tddb");
-        println!("cargo:rustc-link-lib=static=tdsqlite");
-
         let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+        if let Ok(td_lib_dir) = std::env::var("TD_LIB_DIR") {
+            let p = std::path::Path::new(&td_lib_dir);
+            if let Ok(entries) = std::fs::read_dir(p) {
+                let mut libs = Vec::new();
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(ext) = path.extension() {
+                            if ext == "lib" || ext == "a" {
+                                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                                    let lib_name = if stem.starts_with("lib") && ext == "a" {
+                                        &stem[3..]
+                                    } else {
+                                        stem
+                                    };
+                                    libs.push(lib_name.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+                libs.sort();
+                libs.dedup();
+                
+                // Repeat link passes for Windows MSVC to resolve circular dependencies between static libraries
+                let passes = if target_os == "windows" { 2 } else { 1 };
+                for _ in 0..passes {
+                    for lib in &libs {
+                        println!("cargo:rustc-link-lib=static={}", lib);
+                    }
+                }
+            }
+        } else {
+            println!("cargo:rustc-link-lib=static=tdjson_static");
+            println!("cargo:rustc-link-lib=static=tdclient");
+            println!("cargo:rustc-link-lib=static=tdcore");
+            println!("cargo:rustc-link-lib=static=tdapi");
+            println!("cargo:rustc-link-lib=static=tdactor");
+            println!("cargo:rustc-link-lib=static=tdutils");
+            println!("cargo:rustc-link-lib=static=tdnet");
+            println!("cargo:rustc-link-lib=static=tddb");
+            println!("cargo:rustc-link-lib=static=tdsqlite");
+        }
+
         if target_os == "windows" {
             println!("cargo:rustc-link-lib=ws2_32");
             println!("cargo:rustc-link-lib=crypt32");
