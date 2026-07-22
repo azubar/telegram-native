@@ -119,10 +119,9 @@ jobs:
           $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
           if (-not (Test-Path $tdir)) { New-Item -ItemType Directory -Path $tdir -Force }
           $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
-          $vdir = "$vcpkg_root\installed\${{ matrix.vcpkg_triplet }}\lib"
           
-          Write-Host "Searching for zlib/ssl/crypto libraries in $vdir..."
-          $found_libs = Get-ChildItem -Path $vdir -Filter "*.lib" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "zlib|ssl|crypto" }
+          Write-Host "Searching for zlib/ssl/crypto libraries under $vcpkg_root for triplet ${{ matrix.vcpkg_triplet }}..."
+          $found_libs = Get-ChildItem -Path $vcpkg_root -Filter "*.lib" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*${{ matrix.vcpkg_triplet }}*" -and $_.Name -match "zlib|ssl|crypto" }
           foreach ($f in $found_libs) {
               Write-Host "Found lib for ${{ matrix.vcpkg_triplet }}: $($f.FullName)"
               if ($f.Name -match "zlib") {
