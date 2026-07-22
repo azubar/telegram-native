@@ -1,11 +1,12 @@
 <div align="center">
 
-# ⚡ Telegram Native for 1C:Enterprise / BAS
+# ⚡ Telegram Native for 1C:Enterprise / BAS (v2.1.1)
 
 <p align="center">
   <b>Сучасна, супершвидка та безпечна Native API компонента для 1С:Підприємство та BAS мовою Rust на базі TDLib 1.8.65</b>
 </p>
 
+[![Version](https://img.shields.io/badge/Version-2.1.1-blue.svg?style=for-the-badge)](https://github.com/azubar/telegram-native/releases/tag/v2.1.1)
 [![Rust](https://img.shields.io/badge/Rust-2021-orange.svg?style=for-the-badge&logo=rust)](https://www.rust-lang.org/)
 [![TDLib](https://img.shields.io/badge/TDLib-1.8.65-blue.svg?style=for-the-badge&logo=telegram)](https://github.com/tdlib/td)
 [![1C:Enterprise](https://img.shields.io/badge/1C%3AEnterprise-8.3+-red.svg?style=for-the-badge)](https://1c.ru)
@@ -15,23 +16,25 @@
 
 </div>
 
-## 🌟 Основні переваги
+## 🚀 Переваги та ключові відмінності оновленої версії (v2.1.1)
 
-- 🦀 **Написано на Rust**: Нульова ймовірність витоків пам'яті, висока стабільність та максимальна швидкість обробки даних.
-- ⚡ **Підтримка TDLib 1.8.65**: Повний доступ до всіх можливостей Telegram JSON API (боти, особисті акаунти, канали, групи, завантаження та надсилання файлів).
-- 💻 **Кросплатформеність**: Готові збірки під **Windows (x86, x64)** та **Linux (x86, x64)**.
-- 🔄 **Асинхронний режим**: Отримання сповіщень та нових повідомлень Telegram у фоновому режимі без замирання інтерфейсу 1С.
-- 📦 **Готовий пакет 1С (`AddIn.zip`)**: Завантажуйте ZIP-архів безпосередньо в конфігурацію 1С як макет.
+Порівняно з класичними реалізаціями компоненти на C++, нове покоління `telegram-native` пропонує принципово новий рівень надійності та швидкодії:
+
+- 🦀 **Повний перехід на Rust (Edition 2021)**: Гарантована безпека роботи з пам'яттю (Memory Safety). Повністю усунуто небезпечні вказівники, витоки пам'яті (memory leaks) та падіння 1С через сегфолти.
+- 📦 **Повністю автономні (Standalone) бінарники**: Всі залежності — **TDLib 1.8.65**, **OpenSSL**, **SQLite3** та **zlib** — скомпільовані статично та повністю вбудовані (*embedded*) всередину `.dll` та `.so` файлів. Компонента працює "Out of the box" і не вимагає наявності сторонніх DLL/SO у системі.
+- 💻 **Полна кросплатформеність (4 в 1)**: Одночасна підтримка **Windows x86 / x64** та **Linux x86 / x64** в одному підсумковому архіві `AddIn.zip`.
+- ⚡ **Вдосконалена асинхронна обробка**: Використання потокобезпечних Rust-каналів забезпечує стабільну передачу сповіщень Telegram в 1С без замирання інтерфейсу користувача.
+- 🛠 **Сучасна CI/CD автоматизація**: Повністю автоматична мультиплатформена збірка релізів у GitHub Actions.
 
 ---
 
-## 🏛 Архітектура та сумісність
+## 🏛 Архітектура
 
 ```mermaid
 graph TD
     A[1С:Підприємство / BAS] <-->|Native API C-FFI| B[telegram_native.dll / .so]
     B <-->|Rust Wrapper| C[native_api_1c Template]
-    B <-->|C-Linkage| D[TDLib JSON Client 1.8.65]
+    B <-->|Static Linkage| D[TDLib 1.8.65 + OpenSSL + SQLite3 + ZLib]
     D <-->|MTProto / HTTPS| E[Telegram Cloud Servers]
 ```
 
@@ -41,7 +44,7 @@ graph TD
 
 ---
 
-## 🚀 Швидкий старт в 1С
+## ⚡ Швидкий старт в 1С
 
 ```bsl
 // 1. Підключення компоненти з макету або файлу AddIn.zip
@@ -90,7 +93,7 @@ graph TD
 
 ### Вимоги:
 - [Rust toolchain](https://rustup.rs/) (`1.70+`)
-- TDLib 1.8.65
+- CMake та C++ компілятор (MSVC / GCC)
 
 ### Команда збірки:
 ```bash
@@ -105,11 +108,11 @@ cargo build --release
 
 ## 📖 Документація
 
-- 📘 [Детальне керівництво з використання компоненти в 1С](docs/usage_1c.md)
+- 📘 [Детальне керівництво з використання компоненти в 1С](docs/1c_usage_guide.md)
 - 📙 [План переходу на Rust та архітектура](docs/rust_transition_plan.md)
 
 ---
 
 ## 📄 Ліцензія
 
-Проект розповсюджується під ліцензією [Boost Software License 1.0](LICENSE_1_0.txt).
+Проєкт розповсюджується під ліцензією [Boost Software License 1.0](LICENSE_1_0.txt).
