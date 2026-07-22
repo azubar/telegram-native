@@ -118,30 +118,26 @@ jobs:
         run: |
           $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
           if (-not (Test-Path $tdir)) { New-Item -ItemType Directory -Path $tdir -Force }
-          $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
-          $vdir = "$vcpkg_root\installed\${{ matrix.vcpkg_triplet }}\lib"
           
-          # Recursively find any zlib library files and mirror as zlib.lib and zlibstatic.lib
-          $zlib_files = Get-ChildItem -Path $vdir, $tdir, "$env:GITHUB_WORKSPACE\td-src" -Filter "zlib*.lib" -Recurse -ErrorAction SilentlyContinue
-          foreach ($f in $zlib_files) {
-              Copy-Item $f.FullName "$tdir\zlib.lib" -Force
-              Copy-Item $f.FullName "$tdir\zlibstatic.lib" -Force
-              if (Test-Path $vdir) {
-                  Copy-Item $f.FullName "$vdir\zlib.lib" -Force
-                  Copy-Item $f.FullName "$vdir\zlibstatic.lib" -Force
+          Write-Host "Searching for zlib/ssl/crypto libraries across system..."
+          $found_libs = Get-ChildItem -Path "C:\vcpkg", "C:\Program Files", "$env:GITHUB_WORKSPACE" -Filter "*.lib" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "zlib|ssl|crypto" }
+          foreach ($f in $found_libs) {
+              Write-Host "Found lib: $($f.FullName)"
+              if ($f.Name -match "zlib") {
+                  Copy-Item $f.FullName "$tdir\zlib.lib" -Force
+                  Copy-Item $f.FullName "$tdir\zlibstatic.lib" -Force
+              }
+              if ($f.Name -match "ssl") {
+                  Copy-Item $f.FullName "$tdir\libssl.lib" -Force
+                  Copy-Item $f.FullName "$tdir\ssl.lib" -Force
+              }
+              if ($f.Name -match "crypto") {
+                  Copy-Item $f.FullName "$tdir\libcrypto.lib" -Force
+                  Copy-Item $f.FullName "$tdir\crypto.lib" -Force
               }
           }
-          # Mirror ssl and crypto libraries
-          $ssl_files = Get-ChildItem -Path $vdir -Filter "*ssl*.lib" -Recurse -ErrorAction SilentlyContinue
-          foreach ($f in $ssl_files) {
-              Copy-Item $f.FullName "$tdir\libssl.lib" -Force
-              Copy-Item $f.FullName "$tdir\ssl.lib" -Force
-          }
-          $crypto_files = Get-ChildItem -Path $vdir -Filter "*crypto*.lib" -Recurse -ErrorAction SilentlyContinue
-          foreach ($f in $crypto_files) {
-              Copy-Item $f.FullName "$tdir\libcrypto.lib" -Force
-              Copy-Item $f.FullName "$tdir\crypto.lib" -Force
-          }
+          Write-Host "Contents of $tdir:"
+          Get-ChildItem -Path $tdir | Select-Object Name, Length
 
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
@@ -162,12 +158,11 @@ jobs:
 
       - name: Build release component
         shell: pwsh
-        run: |
-          $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
-          $env:VCPKG_LIB_DIR = "$vcpkg_root\installed\${{ matrix.vcpkg_triplet }}\lib"
-          $env:TD_LIB_DIR = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
-          $env:TD_STATIC = "1"
-          cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          TD_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
+          VCPKG_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
+          TD_STATIC: 1
 
       - name: Prepare artifact
         shell: pwsh
