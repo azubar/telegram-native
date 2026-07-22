@@ -97,18 +97,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/tdlib-install
-          key: tdlib-1.8.65-v4-${{ matrix.target }}
+          key: tdlib-1.8.65-v5-${{ matrix.target }}
 
       - name: Build TDLib (Windows)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'windows')
         shell: pwsh
         run: |
+          $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
           git clone https://github.com/tdlib/td.git td-src
           cd td-src
           git checkout 022d60202e446ad1287b9fb68e687c8a0760788b
           mkdir build
           cd build
-          cmake -A ${{ matrix.msvc_generator_arch }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DOPENSSL_USE_STATIC_LIBS=TRUE -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
+          cmake -A ${{ matrix.msvc_generator_arch }} -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=OFF -DOPENSSL_USE_STATIC_LIBS=TRUE -DCMAKE_TOOLCHAIN_FILE="$vcpkg_root/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }} -DCMAKE_INSTALL_PREFIX="$env:GITHUB_WORKSPACE\tdlib-install" ..
           cmake --build . --config Release --target install --parallel 2
 
       - name: Prepare MSVC library aliases
@@ -116,13 +117,31 @@ jobs:
         shell: pwsh
         run: |
           $tdir = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
-          $vdir = "C:\vcpkg\installed\${{ matrix.vcpkg_triplet }}\lib"
-          if (Test-Path "$vdir\zlibstatic.lib") { Copy-Item "$vdir\zlibstatic.lib" "$vdir\zlib.lib" -Force; if (Test-Path $tdir) { Copy-Item "$vdir\zlibstatic.lib" "$tdir\zlib.lib" -Force } }
-          if (Test-Path "$vdir\zlib.lib") { Copy-Item "$vdir\zlib.lib" "$vdir\zlibstatic.lib" -Force; if (Test-Path $tdir) { Copy-Item "$vdir\zlib.lib" "$tdir\zlibstatic.lib" -Force } }
-          if (Test-Path "$vdir\libssl.lib") { Copy-Item "$vdir\libssl.lib" "$vdir\ssl.lib" -Force }
-          if (Test-Path "$vdir\ssl.lib") { Copy-Item "$vdir\ssl.lib" "$vdir\libssl.lib" -Force }
-          if (Test-Path "$vdir\libcrypto.lib") { Copy-Item "$vdir\libcrypto.lib" "$vdir\crypto.lib" -Force }
-          if (Test-Path "$vdir\crypto.lib") { Copy-Item "$vdir\crypto.lib" "$vdir\libcrypto.lib" -Force }
+          if (-not (Test-Path $tdir)) { New-Item -ItemType Directory -Path $tdir -Force }
+          $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
+          $vdir = "$vcpkg_root\installed\${{ matrix.vcpkg_triplet }}\lib"
+          
+          # Recursively find any zlib library files and mirror as zlib.lib and zlibstatic.lib
+          $zlib_files = Get-ChildItem -Path $vdir, $tdir, "$env:GITHUB_WORKSPACE\td-src" -Filter "zlib*.lib" -Recurse -ErrorAction SilentlyContinue
+          foreach ($f in $zlib_files) {
+              Copy-Item $f.FullName "$tdir\zlib.lib" -Force
+              Copy-Item $f.FullName "$tdir\zlibstatic.lib" -Force
+              if (Test-Path $vdir) {
+                  Copy-Item $f.FullName "$vdir\zlib.lib" -Force
+                  Copy-Item $f.FullName "$vdir\zlibstatic.lib" -Force
+              }
+          }
+          # Mirror ssl and crypto libraries
+          $ssl_files = Get-ChildItem -Path $vdir -Filter "*ssl*.lib" -Recurse -ErrorAction SilentlyContinue
+          foreach ($f in $ssl_files) {
+              Copy-Item $f.FullName "$tdir\libssl.lib" -Force
+              Copy-Item $f.FullName "$tdir\ssl.lib" -Force
+          }
+          $crypto_files = Get-ChildItem -Path $vdir -Filter "*crypto*.lib" -Recurse -ErrorAction SilentlyContinue
+          foreach ($f in $crypto_files) {
+              Copy-Item $f.FullName "$tdir\libcrypto.lib" -Force
+              Copy-Item $f.FullName "$tdir\crypto.lib" -Force
+          }
 
       - name: Build TDLib (Linux)
         if: steps.cache-tdlib.outputs.cache-hit != 'true' && contains(matrix.os, 'ubuntu')
@@ -143,11 +162,12 @@ jobs:
 
       - name: Build release component
         shell: pwsh
-        run: cargo build --release --target ${{ matrix.target }}
-        env:
-          TD_LIB_DIR: ${{ github.workspace }}/tdlib-install/lib
-          VCPKG_LIB_DIR: C:/vcpkg/installed/${{ matrix.vcpkg_triplet }}/lib
-          TD_STATIC: 1
+        run: |
+          $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
+          $env:VCPKG_LIB_DIR = "$vcpkg_root\installed\${{ matrix.vcpkg_triplet }}\lib"
+          $env:TD_LIB_DIR = "$env:GITHUB_WORKSPACE\tdlib-install\lib"
+          $env:TD_STATIC = "1"
+          cargo build --release --target ${{ matrix.target }}
 
       - name: Prepare artifact
         shell: pwsh
