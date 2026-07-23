@@ -120,13 +120,14 @@ jobs:
           if (-not (Test-Path $tdir)) { New-Item -ItemType Directory -Path $tdir -Force }
           $vcpkg_root = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { "C:\vcpkg" }
           
-          Write-Host "Searching for zlib/ssl/crypto libraries under $vcpkg_root and $env:GITHUB_WORKSPACE..."
-          $found_libs = Get-ChildItem -Path $vcpkg_root, "$env:GITHUB_WORKSPACE" -Filter "*.lib" -Recurse -ErrorAction SilentlyContinue | Where-Object { ($_.FullName -like "*${{ matrix.vcpkg_triplet }}*" -or $_.FullName -like "*td-src*") -and $_.Name -match "zlib|ssl|crypto" }
+          Write-Host "Searching for zlib/zs/ssl/crypto libraries under $vcpkg_root and $env:GITHUB_WORKSPACE..."
+          $found_libs = Get-ChildItem -Path $vcpkg_root, "$env:GITHUB_WORKSPACE" -Filter "*.lib" -Recurse -ErrorAction SilentlyContinue | Where-Object { ($_.FullName -like "*${{ matrix.vcpkg_triplet }}*" -or $_.FullName -like "*td-src*") -and $_.Name -match "zlib|zs|ssl|crypto" }
           foreach ($f in $found_libs) {
               Write-Host "Found lib: $($f.FullName)"
-              if ($f.Name -match "zlib") {
+              if ($f.Name -match "zlib|zs") {
                   Copy-Item $f.FullName "$tdir\zlib.lib" -Force
                   Copy-Item $f.FullName "$tdir\zlibstatic.lib" -Force
+                  Copy-Item $f.FullName "$tdir\zs.lib" -Force
               }
               if ($f.Name -match "ssl") {
                   Copy-Item $f.FullName "$tdir\libssl.lib" -Force
